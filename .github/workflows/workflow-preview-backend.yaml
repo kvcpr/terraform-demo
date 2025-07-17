@@ -30,7 +30,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ inputs.AWS_ROLE_TO_ASSUME }}
-          aws-region: eu-central-1
+          aws-region: us-east-1
       - name: Deploy to ephemeral environment 
         id: tf
         working-directory: ./infrastructure/env/preview
