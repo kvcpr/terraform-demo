@@ -38,7 +38,7 @@ jobs:
           role-to-assume: "arn:aws:iam::841731975640:role/dev-github_oidc-role"
           aws-region: eu-central-1
       - name: Destroy ephemeral environment 
-        working-directory: ./infrastructure/preview
+        working-directory: ./infrastructure/env/preview
         run: |
           terraform init
           terraform workspace select -or-create pr${{ github.event.pull_request.number }}
