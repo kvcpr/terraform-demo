@@ -1,0 +1,25 @@
+name: 🚀 Pull Request CI
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: pr${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: read
+  discussions: write
+  pull-requests: write
+  statuses: write
+  id-token: write
+
+jobs:
+  deploy-backend-preview:
+    name: 🏗️ Deploy backend preview
+    uses: ./.github/workflows/workflow-preview-backend.yaml
+    secrets: inherit
+
+    

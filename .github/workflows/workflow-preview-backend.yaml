@@ -1,0 +1,74 @@
+name: ⚡️ Build preview for backend
+
+on:
+  workflow_call:
+    inputs:
+      AWS_ROLE_TO_ASSUME:
+        type: string
+        required: true
+        default: "arn:aws:iam::841731975640:role/dev-github_oidc-role"
+
+    outputs:
+      preview-url:
+        value: ${{ jobs.setup-infra.outputs.lambda_url }}
+
+jobs:
+  setup-infra:
+    name: Setup infrastructure
+    runs-on: ubuntu-latest
+    outputs:
+      lambda_url: ${{ steps.outputs.outputs.lambda_url }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.3"
+      - name: 🔓 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-central-1
+      - name: Deploy to ephemeral environment 
+        id: tf
+        working-directory: ./infrastructure/env/preview
+        run: |
+          terraform init
+          terraform workspace select -or-create pr${{ github.event.pull_request.number }}
+          terraform apply -auto-approve
+          
+      - name: Capture Lambda Function URL
+        id: outputs
+        working-directory: ./infrastructure/env/preview
+        run: |
+          LAMBDA_URL=$(terraform output -raw LAMBDA_FUNCTION_URL)
+          echo "lambda_url=$LAMBDA_URL" >> $GITHUB_OUTPUT
+
+
+      - name: 🔎 Find Comment
+        uses: peter-evans/find-comment@v3
+        id: find_comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'LyfePlanBot'
+          body-includes: Preview URL
+
+      - name: 💬 Create comment
+        if: ${{ steps.find_comment.outputs.comment-id == '' }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Preview URL: ${{ steps.outputs.outputs.lambda_url }}
+
+      - name: 💬 Update comment
+        if: ${{ steps.find_comment.outputs.comment-id != '' }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            Preview URL: ${{ steps.outputs.outputs.lambda_url }}
