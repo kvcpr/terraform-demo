@@ -2,11 +2,6 @@ name: ⚡️ Build preview for backend
 
 on:
   workflow_call:
-    inputs:
-      AWS_ROLE_TO_ASSUME:
-        type: string
-        default: "arn:aws:iam::841731975640:role/dev-github_oidc-role"
-
     outputs:
       preview-url:
         value: ${{ jobs.setup-infra.outputs.lambda_url }}
@@ -29,8 +24,8 @@ jobs:
       - name: 🔓 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ inputs.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
+          role-to-assume: "arn:aws:iam::841731975640:role/dev-github_oidc-role"
+          aws-region: eu-central-1
       - name: Deploy to ephemeral environment 
         id: tf
         working-directory: ./infrastructure/env/preview

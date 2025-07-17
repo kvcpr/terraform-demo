@@ -35,8 +35,8 @@ jobs:
       - name: 🔓 Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::841731975640:role/dev-github_oidc-role
-          aws-region: us-east-1
+          role-to-assume: "arn:aws:iam::841731975640:role/dev-github_oidc-role"
+          aws-region: eu-central-1
       - name: Destroy ephemeral environment 
         working-directory: ./infrastructure/preview
         run: |
