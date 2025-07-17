@@ -1,0 +1,47 @@
+name: 🚀 Pull Request Clean Up
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: write
+  statuses: write
+  id-token: write
+
+concurrency:
+  group: pr${{ github.event.number }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  down:
+    name: Destroy ephemeral environment
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.3"
+      - name: 🔓 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::841731975640:role/dev-github_oidc-role"
+          aws-region: eu-central-1
+      - name: Destroy ephemeral environment 
+        working-directory: ./infrastructure/preview
+        run: |
+          terraform init
+          terraform workspace select -or-create pr${{ github.event.pull_request.number }}
+          terraform destroy -auto-approve
+          terraform workspace select default
+          terraform workspace delete pr${{ github.event.pull_request.number }}

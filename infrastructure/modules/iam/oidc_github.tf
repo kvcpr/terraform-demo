@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "oidc_github" {
 
     condition {
       test     = "StringLike"
-      values   = ["repo:kvcpr/terraform-demo"]
+      values   = ["repo:kvcpr/terraform-demo:*"]
       variable = "token.actions.githubusercontent.com:sub"
     }
   }
